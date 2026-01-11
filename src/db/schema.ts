@@ -10,7 +10,7 @@ export const usersTable = pgTable("users", {
   deletedAt: timestamp(),
 });
 
-export const itemsTable = pgTable("items", {
+export const productsTable = pgTable("products", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   name: varchar({ length: 255 }).notNull(),
   description: text().notNull(),

@@ -2,7 +2,7 @@ import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import usersApp from "./users.js";
-import itemsApp from "./items.js";
+import productsApp from "./products.js";
 
 const app = new Hono();
 
@@ -14,13 +14,12 @@ app.get("/api", (c) =>
     message: "Dayan mock API",
     endpoints: {
       users: "/api/users",
-      items: "/api/items",
+      products: "/api/products",
     },
   })
 );
-
 app.route("/api/users", usersApp);
-app.route("/api/items", itemsApp);
+app.route("/api/products", productsApp);
 
 serve(
   {

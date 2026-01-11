@@ -1,7 +1,7 @@
 import "dotenv/config";
 
 import db from "./index.js";
-import { itemsTable, usersTable } from "./schema.js";
+import { productsTable, usersTable } from "./schema.js";
 import { faker } from "@faker-js/faker";
 
 const seed = async () => {
@@ -9,25 +9,23 @@ const seed = async () => {
   await db.delete(usersTable);
   console.log("🌱 Seeding database...");
 
-  const numberOfUsers = faker.number.int({ min: 100, max: 1000 });
+  const numberOfRowsToSeed = faker.number.int({ min: 100, max: 1000 });
 
-  const users = Array.from({ length: numberOfUsers }, () => ({
+  const users = Array.from({ length: numberOfRowsToSeed }, () => ({
     name: faker.person.fullName(),
     email: faker.internet.email(),
   }));
 
-  const numberOfItems = faker.number.int({ min: 100, max: 1000 });
+  const result = await db.insert(usersTable).values(users).returning();
+  console.log(`✅ ${result.length} rows seeded successfully`);
 
-  const items = Array.from({ length: numberOfItems }, () => ({
+  const products = Array.from({ length: numberOfRowsToSeed }, () => ({
     name: faker.commerce.productName(),
     description: faker.commerce.productDescription(),
   }));
 
-  const result = await db.insert(usersTable).values(users).returning();
-  console.log(`✅ ${result.length} users seeded successfully`);
-
-  const result2 = await db.insert(itemsTable).values(items).returning();
-  console.log(`✅ ${result2.length} items seeded successfully`);
+  const result2 = await db.insert(productsTable).values(products).returning();
+  console.log(`✅ ${result2.length} products seeded successfully`);
 
   console.log("✅ Database seeded successfully");
 };

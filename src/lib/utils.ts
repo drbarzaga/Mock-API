@@ -38,7 +38,7 @@ export function isPositiveInteger(id: number): boolean {
   return Number.isInteger(id) && id > 0;
 }
 
-export function validateItemInput(
+export function validateProductInput(
   name?: string,
   description?: string
 ): { valid: boolean; error?: string } {
