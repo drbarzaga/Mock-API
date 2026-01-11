@@ -37,3 +37,27 @@ export function validateUserInput(
 export function isPositiveInteger(id: number): boolean {
   return Number.isInteger(id) && id > 0;
 }
+
+export function validateItemInput(
+  name?: string,
+  description?: string
+): { valid: boolean; error?: string } {
+  if (name !== undefined) {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return { valid: false, error: "Name cannot be empty" };
+    }
+    if (trimmedName.length > 255) {
+      return { valid: false, error: "Name cannot exceed 255 characters" };
+    }
+  }
+
+  if (description !== undefined) {
+    const trimmedDescription = description.trim();
+    if (!trimmedDescription) {
+      return { valid: false, error: "Description cannot be empty" };
+    }
+  }
+
+  return { valid: true };
+}

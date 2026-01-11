@@ -6,8 +6,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "seed": "tsx src/db/seed.ts",
-    "db:push": "drizzle-kit push",
-   "postbuild": "pnpm run db:push && pnpm run seed"
+    "db:push": "npx drizzle-kit push",
+    "postbuild": "pnpm run db:push && pnpm run seed"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.8",
