@@ -25,11 +25,12 @@ usersApp.get("/:id", async (c) => {
     const user = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.id, userId));
-    if (!user) {
+      .where(eq(usersTable.id, userId))
+      .limit(1);
+    if (!user[0]) {
       return c.json({ error: "User not found" }, 404);
     }
-    return c.json(user);
+    return c.json(user[0]);
   } catch (error) {
     return c.json({ error: "Failed to get user" }, 500);
   }
