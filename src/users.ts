@@ -40,10 +40,16 @@ usersApp.get("/:id", async (c) => {
 usersApp.post("/", async (c) => {
   try {
     const { name, email } = await c.req.json();
+
+    if (!name || !email) {
+      return c.json({ error: "Name and email are required" }, 400);
+    }
+
     const [user] = await db
       .insert(usersTable)
       .values({ name, email })
       .returning();
+
     if (!user) {
       return c.json({ error: "Failed to create user" }, 500);
     }
