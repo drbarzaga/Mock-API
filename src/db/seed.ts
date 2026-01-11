@@ -5,9 +5,13 @@ import { usersTable } from "./schema.js";
 import { faker } from "@faker-js/faker";
 
 const seed = async () => {
+  console.log("🌱 Deleting existing users...");
+  await db.delete(usersTable);
   console.log("🌱 Seeding database...");
 
-  const users = Array.from({ length: 100 }, () => ({
+  const numberOfUsers = faker.number.int({ min: 100, max: 1000 });
+
+  const users = Array.from({ length: numberOfUsers }, () => ({
     name: faker.person.fullName(),
     email: faker.internet.email(),
   }));
