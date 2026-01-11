@@ -1,20 +1,68 @@
 import { Hono } from "hono";
 import db from "./db/index.js";
 import { usersTable } from "./db/schema.js";
-import { desc, eq, isNull } from "drizzle-orm";
-import { isPositiveInteger, validateUserInput } from "./lib/utils.js";
+import { desc, eq, isNull, count } from "drizzle-orm";
+import {
+  isPositiveInteger,
+  validateUserInput,
+  parsePaginationParams,
+  type PaginationResult,
+} from "./lib/utils.js";
 
 const usersApp = new Hono();
 
-// GET /api/users - Get all users (excluding soft-deleted)
+// GET /api/users - Get all users (excluding soft-deleted) with optional pagination
 usersApp.get("/", async (c) => {
   try {
+    const pageParam = c.req.query("page");
+    const limitParam = c.req.query("limit");
+
+    // If no pagination parameters are provided, return all users (original behavior)
+    if (!pageParam && !limitParam) {
+      const users = await db
+        .select()
+        .from(usersTable)
+        .where(isNull(usersTable.deletedAt))
+        .orderBy(desc(usersTable.createdAt));
+      return c.json(users);
+    }
+
+    // Parse and validate pagination parameters
+    const paginationValidation = parsePaginationParams(pageParam, limitParam);
+    if (!paginationValidation.valid) {
+      return c.json({ error: paginationValidation.error }, 400);
+    }
+
+    const { page, limit, offset } = paginationValidation.params!;
+
+    // Get total count
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(usersTable)
+      .where(isNull(usersTable.deletedAt));
+
+    // Get paginated users
     const users = await db
       .select()
       .from(usersTable)
       .where(isNull(usersTable.deletedAt))
-      .orderBy(desc(usersTable.createdAt));
-    return c.json(users);
+      .orderBy(desc(usersTable.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const totalPages = Math.ceil(total / limit);
+
+    const response: PaginationResult<(typeof users)[0]> = {
+      data: users,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
+
+    return c.json(response);
   } catch (error) {
     console.error("Error getting users:", error);
     return c.json({ error: "Failed to get users" }, 500);

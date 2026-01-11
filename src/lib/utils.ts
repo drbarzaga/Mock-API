@@ -61,3 +61,71 @@ export function validateProductInput(
 
   return { valid: true };
 }
+
+// Pagination utilities
+export interface PaginationParams {
+  page: number;
+  limit: number;
+  offset: number;
+}
+
+export interface PaginationResult<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export function parsePaginationParams(
+  pageParam?: string,
+  limitParam?: string
+): { valid: boolean; params?: PaginationParams; error?: string } {
+  const DEFAULT_PAGE = 1;
+  const DEFAULT_LIMIT = 10;
+  const MAX_LIMIT = 100;
+
+  let page = DEFAULT_PAGE;
+  let limit = DEFAULT_LIMIT;
+
+  if (pageParam !== undefined) {
+    const parsedPage = Number.parseInt(pageParam, 10);
+    if (Number.isNaN(parsedPage) || parsedPage < 1) {
+      return {
+        valid: false,
+        error: "Page must be a positive integer",
+      };
+    }
+    page = parsedPage;
+  }
+
+  if (limitParam !== undefined) {
+    const parsedLimit = Number.parseInt(limitParam, 10);
+    if (Number.isNaN(parsedLimit) || parsedLimit < 1) {
+      return {
+        valid: false,
+        error: "Limit must be a positive integer",
+      };
+    }
+    if (parsedLimit > MAX_LIMIT) {
+      return {
+        valid: false,
+        error: `Limit cannot exceed ${MAX_LIMIT}`,
+      };
+    }
+    limit = parsedLimit;
+  }
+
+  const offset = (page - 1) * limit;
+
+  return {
+    valid: true,
+    params: {
+      page,
+      limit,
+      offset,
+    },
+  };
+}

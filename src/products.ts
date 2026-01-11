@@ -1,20 +1,68 @@
 import { Hono } from "hono";
 import db from "./db/index.js";
 import { productsTable } from "./db/schema.js";
-import { desc, eq, isNull } from "drizzle-orm";
-import { isPositiveInteger, validateProductInput } from "./lib/utils.js";
+import { desc, eq, isNull, count } from "drizzle-orm";
+import {
+  isPositiveInteger,
+  validateProductInput,
+  parsePaginationParams,
+  type PaginationResult,
+} from "./lib/utils.js";
 
 const productsApp = new Hono();
 
-// GET /api/products - Get all products (excluding soft-deleted)
+// GET /api/products - Get all products (excluding soft-deleted) with optional pagination
 productsApp.get("/", async (c) => {
   try {
+    const pageParam = c.req.query("page");
+    const limitParam = c.req.query("limit");
+
+    // If no pagination parameters are provided, return all products (original behavior)
+    if (!pageParam && !limitParam) {
+      const products = await db
+        .select()
+        .from(productsTable)
+        .where(isNull(productsTable.deletedAt))
+        .orderBy(desc(productsTable.createdAt));
+      return c.json(products);
+    }
+
+    // Parse and validate pagination parameters
+    const paginationValidation = parsePaginationParams(pageParam, limitParam);
+    if (!paginationValidation.valid) {
+      return c.json({ error: paginationValidation.error }, 400);
+    }
+
+    const { page, limit, offset } = paginationValidation.params!;
+
+    // Get total count
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(productsTable)
+      .where(isNull(productsTable.deletedAt));
+
+    // Get paginated products
     const products = await db
       .select()
       .from(productsTable)
       .where(isNull(productsTable.deletedAt))
-      .orderBy(desc(productsTable.createdAt));
-    return c.json(products);
+      .orderBy(desc(productsTable.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const totalPages = Math.ceil(total / limit);
+
+    const response: PaginationResult<(typeof products)[0]> = {
+      data: products,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
+
+    return c.json(response);
   } catch (error) {
     console.error("Error getting products:", error);
     return c.json({ error: "Failed to get products" }, 500);
