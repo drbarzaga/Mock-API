@@ -11,7 +11,7 @@ app.get("/", (c) => c.redirect("/api"));
 // Root route
 app.get("/api", (c) =>
   c.json({
-    message: "Dayan mock API",
+    message: "Mock API",
     endpoints: {
       users: "/api/users",
       products: "/api/products",
